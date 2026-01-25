@@ -1,6 +1,7 @@
 name: Build project
 on: [push, pull_request]
 
+# 같은 브랜치에서 여러 실행이 겹치지 않게(활성화 충돌 방지)
 concurrency:
   group: unity-build-${{ github.ref }}
   cancel-in-progress: false
@@ -48,6 +49,10 @@ jobs:
   macos:
     name: macOS (StandaloneOSX)
     runs-on: macos-latest
+
+    # (핵심) Android가 끝나서 return-license까지 수행된 뒤에 macOS 시작
+    needs: android
+
     steps:
       - uses: actions/checkout@v4
         with:
