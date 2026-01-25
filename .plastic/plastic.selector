@@ -1,0 +1,4 @@
+repository "TestCI_CD/TestCI_CD@14569677468480@cloud"
+  path "/"
+    br "/main"
+    co "/main"
