@@ -1,6 +1,10 @@
 name: Build project
 on: [push, pull_request]
 
+concurrency:
+  group: unity-build-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   android:
     name: Android
@@ -19,7 +23,8 @@ jobs:
 
       - uses: jlumbroso/free-disk-space@v1.3.1
 
-      - uses: game-ci/unity-builder@v4
+      - name: Build (Android)
+        uses: game-ci/unity-builder@v4
         env:
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -32,16 +37,17 @@ jobs:
           name: Build-Android
           path: build/Android
 
-  apple:
-    name: Apple (${{ matrix.targetPlatform }})
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        targetPlatform:
-          - iOS
-          - StandaloneOSX # 필요할 때만 돌리고 싶으면 아래 if 조건으로 제어
+      - name: Return license (always)
+        if: always()
+        uses: game-ci/unity-return-license@v2
+        env:
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
+  macos:
+    name: macOS (StandaloneOSX)
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,21 +57,28 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: Library
-          key: Library-${{ matrix.targetPlatform }}
+          key: Library-StandaloneOSX
           restore-keys: Library-
 
-      - uses: game-ci/unity-builder@v4
+      - name: Build (StandaloneOSX)
+        uses: game-ci/unity-builder@v4
         env:
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          targetPlatform: ${{ matrix.targetPlatform }}
-          # macOS 러너에서 유니티 설치 캐시(선택)
+          targetPlatform: StandaloneOSX
           cacheUnityInstallationOnMac: true
-          # unityHubVersionOnMac: "3.4.0"  # 필요 시 핀 고정
-          # 위 옵션들은 builder 문서에 있음
+
       - uses: actions/upload-artifact@v4
         with:
-          name: Build-${{ matrix.targetPlatform }}
-          path: build/${{ matrix.targetPlatform }}
+          name: Build-StandaloneOSX
+          path: build/StandaloneOSX
+
+      - name: Return license (always)
+        if: always()
+        uses: game-ci/unity-return-license@v2
+        env:
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
