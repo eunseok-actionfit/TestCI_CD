@@ -16,7 +16,6 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        projectPath: [ '.' ]
         unityVersion: [ 6000.3.5f1 ]
         androidExportType: [ androidPackage, androidAppBundle ] # apk, aab
 
@@ -28,16 +27,15 @@ jobs:
           lfs: true
           fetch-depth: 0
 
-      # Unity Library 캐시 (프로젝트 경로 기준)
+      # Unity Library 캐시 (repo 루트에 Unity 프로젝트가 있을 때: ./Library)
+      # apk/aab 공유: androidExportType을 키에서 제거
       - name: Cache Library
         uses: actions/cache@v4
         with:
-          path: ${{ matrix.projectPath }}/Library
-          key: Library-${{ runner.os }}-${{ matrix.projectPath }}-Android-${{ matrix.unityVersion }}-${{ matrix.androidExportType }}
+          path: Library
+          key: Library-${{ runner.os }}-Android-${{ matrix.unityVersion }}
           restore-keys: |
-            Library-${{ runner.os }}-${{ matrix.projectPath }}-Android-${{ matrix.unityVersion }}-
-            Library-${{ runner.os }}-${{ matrix.projectPath }}-Android-
-            Library-${{ runner.os }}-${{ matrix.projectPath }}-
+            Library-${{ runner.os }}-Android-
             Library-${{ runner.os }}-
 
       - name: Build
@@ -49,7 +47,7 @@ jobs:
           # 가능하면 이 방식이 더 안정적
           # UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          projectPath: ${{ matrix.projectPath }}
+          projectPath: .
           unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: Android
           androidExportType: ${{ matrix.androidExportType }}
@@ -60,10 +58,6 @@ jobs:
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
           androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
           androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
-
-          # 버전(원하면 사용)
-          # androidVersionCode: ${{ github.run_number }}
-          # version: 1.0.${{ github.run_number }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
