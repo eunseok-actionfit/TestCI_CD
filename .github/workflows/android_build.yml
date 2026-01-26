@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        androidExportType: [ androidPackage, androidAppBundle ] # apk, aab
+        androidExportType: [ androidPackage ] # apk, aab
 
     steps:
       - uses: actions/checkout@v4
