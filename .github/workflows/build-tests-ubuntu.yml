@@ -27,18 +27,18 @@ jobs:
         with:
           lfs: true
 
+      # Library 캐시: apk/aab 공유 (androidArtifact 제거)
       - uses: actions/cache@v4
         with:
           path: ${{ matrix.projectPath }}/Library
-          key: Library-${{ matrix.projectPath }}-ubuntu-Android-${{ matrix.unityVersion }}-${{ matrix.androidArtifact }}
+          key: Library-${{ matrix.projectPath }}-ubuntu-Android-${{ matrix.unityVersion }}
           restore-keys: |
-            Library-${{ matrix.projectPath }}-ubuntu-Android-${{ matrix.unityVersion }}-
             Library-${{ matrix.projectPath }}-ubuntu-Android-
             Library-${{ matrix.projectPath }}-ubuntu-
             Library-
 
       - name: Build
-        uses: ./
+        uses: game-ci/unity-builder@v4
         id: build-1
         continue-on-error: true
         timeout-minutes: 45
@@ -46,6 +46,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+
         with:
           buildName: "Android Build (${{ matrix.androidArtifact }})"
           projectPath: ${{ matrix.projectPath }}
@@ -62,7 +63,7 @@ jobs:
         run: sleep 60
 
       - name: Build (Retry 1)
-        uses: ./
+        uses: game-ci/unity-builder@v4
         id: build-2
         if: ${{ steps.build-1.outcome == 'failure' }}
         continue-on-error: true
@@ -71,6 +72,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+
         with:
           buildName: "Android Build (${{ matrix.androidArtifact }})"
           projectPath: ${{ matrix.projectPath }}
@@ -87,7 +89,7 @@ jobs:
         run: sleep 240
 
       - name: Build (Retry 2)
-        uses: ./
+        uses: game-ci/unity-builder@v4
         id: build-3
         if: ${{ steps.build-2.outcome == 'failure' }}
         timeout-minutes: 45
@@ -95,6 +97,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+
         with:
           buildName: "Android Build (${{ matrix.androidArtifact }})"
           projectPath: ${{ matrix.projectPath }}
