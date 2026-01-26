@@ -19,6 +19,11 @@ jobs:
       matrix:
         androidExportType: [ androidPackage ] # androidPackage=APK, androidAppBundle=AAB
 
+    env:
+      UNITY_VERSION: ${{ vars.UNITY_VERSION || '6000.3.5f1' }}
+      UNITY_PROJECT_PATH: ${{ vars.UNITY_PROJECT_PATH || '.' }}
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,21 +38,21 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-${{ runner.os }}-Android-${{ vars.UNITY_VERSION || '6000.3.5f1' }}
+          key: Library-${{ runner.os }}-Android-${{ env.UNITY_VERSION }}
           restore-keys: |
             Library-${{ runner.os }}-Android-
             Library-${{ runner.os }}-
 
       - name: Build (Signed)
-        if: secrets.ANDROID_KEYSTORE_BASE64 != ''
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
         uses: game-ci/unity-builder@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          projectPath: ${{ vars.UNITY_PROJECT_PATH || '.' }}
-          unityVersion: ${{ vars.UNITY_VERSION || '6000.3.5f1' }}
+          projectPath: ${{ env.UNITY_PROJECT_PATH }}
+          unityVersion: ${{ env.UNITY_VERSION }}
           targetPlatform: Android
           androidExportType: ${{ matrix.androidExportType }}
 
@@ -58,21 +63,21 @@ jobs:
           androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
 
       - name: Build (Unsigned)
-        if: secrets.ANDROID_KEYSTORE_BASE64 == ''
+        if: ${{ env.HAS_KEYSTORE != 'true' }}
         uses: game-ci/unity-builder@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          projectPath: ${{ vars.UNITY_PROJECT_PATH || '.' }}
-          unityVersion: ${{ vars.UNITY_VERSION || '6000.3.5f1' }}
+          projectPath: ${{ env.UNITY_PROJECT_PATH }}
+          unityVersion: ${{ env.UNITY_VERSION }}
           targetPlatform: Android
           androidExportType: ${{ matrix.androidExportType }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Android-${{ matrix.androidExportType }}-Unity-${{ vars.UNITY_VERSION || '6000.3.5f1' }}-Run-${{ github.run_number }}
+          name: Android-${{ matrix.androidExportType }}-Unity-${{ env.UNITY_VERSION }}-Run-${{ github.run_number }}
           path: build/Android
           retention-days: 14
