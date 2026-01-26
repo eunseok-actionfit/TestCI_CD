@@ -52,6 +52,9 @@ jobs:
           unityVersion: ${{ vars.UNITY_VERSION || '6000.3.5f1' }}
           targetPlatform: Android
           androidExportType: androidAppBundle
+          
+          buildMethod: AndroidVersioning.ApplyAndroidVersionCodeFromArgs
+          customParameters: -androidVersionCode ${{ github.run_number }}
 
           androidKeystoreName: keystore.keystore
           androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
