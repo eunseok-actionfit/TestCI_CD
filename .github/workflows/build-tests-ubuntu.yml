@@ -1,8 +1,10 @@
 name: Build - Android (Ubuntu)
 
 on:
-  workflow_dispatch:
   push:
+    branches: [ main ]
+    # tags: [ "v*" ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -15,7 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        projectPath: [test-project]
+        # 중요: 실제 Unity 프로젝트 폴더로 맞추세요.
+        # 레포 루트가 Unity 프로젝트면 '.' 로 변경하는 게 정답입니다.
+        projectPath: ['.']
         unityVersion: [6000.3.5f1]
         androidArtifact: [apk, aab]
 
@@ -27,7 +31,16 @@ jobs:
         with:
           lfs: true
 
-      # Library 캐시: apk/aab 공유 (androidArtifact 제거)
+      # (선택) 경로 검증: Unity 프로젝트 루트에 Assets/Packages/ProjectSettings 가 있는지 확인
+      - name: Verify Unity project path
+        run: |
+          echo "projectPath=${{ matrix.projectPath }}"
+          ls -la "${{ matrix.projectPath }}"
+          test -d "${{ matrix.projectPath }}/Assets"
+          test -d "${{ matrix.projectPath }}/Packages"
+          test -d "${{ matrix.projectPath }}/ProjectSettings"
+
+      # Library 캐시: apk/aab 공유
       - uses: actions/cache@v4
         with:
           path: ${{ matrix.projectPath }}/Library
