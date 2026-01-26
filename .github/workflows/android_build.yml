@@ -49,11 +49,11 @@ jobs:
           androidExportType: ${{ matrix.androidExportType }}
 
           # 서명(필요 시)
-          androidKeystoreName: keystore.keystore
-          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
-          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
-          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+          #androidKeystoreName: keystore.keystore
+          #androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          #androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          #androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          #androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
