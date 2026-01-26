@@ -20,15 +20,15 @@ jobs:
         androidExportType: [ androidPackage ] # androidPackage=APK, androidAppBundle=AAB
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           lfs: true
           fetch-depth: 0
 
-      # 디스크 여유 (Android 빌드가 용량을 많이 씀)
-      - uses: jlumbroso/free-disk-space@v1.3.1
+      - name: Free disk space (Android)
+        uses: jlumbroso/free-disk-space@v1.3.1
 
-      # Unity Library 캐시 (프로젝트가 repo 루트일 때: ./Library)
       - name: Cache Library
         uses: actions/cache@v4
         with:
@@ -38,23 +38,19 @@ jobs:
             Library-${{ runner.os }}-Android-
             Library-${{ runner.os }}-
 
-      # (선택) keystore 시크릿이 있으면 "signed"로 빌드, 없으면 "unsigned"로 빌드
       - name: Build (Signed)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: secrets.ANDROID_KEYSTORE_BASE64 != ''
         uses: game-ci/unity-builder@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-          # 가능하면 이걸로 바꾸는 게 더 안정적인 경우가 많음
-          # UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           projectPath: ${{ vars.UNITY_PROJECT_PATH || '.' }}
           unityVersion: ${{ vars.UNITY_VERSION || '6000.3.5f1' }}
           targetPlatform: Android
           androidExportType: ${{ matrix.androidExportType }}
 
-          # 서명(커스텀 키스토어) 주입
           androidKeystoreName: user.keystore
           androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
@@ -62,7 +58,7 @@ jobs:
           androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
 
       - name: Build (Unsigned)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 == '' }}
+        if: secrets.ANDROID_KEYSTORE_BASE64 == ''
         uses: game-ci/unity-builder@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
