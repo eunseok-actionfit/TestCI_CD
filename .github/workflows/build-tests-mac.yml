@@ -1,8 +1,8 @@
 name: Build - macOS + iOS (macOS runner)
 
 on:
-  push:
-    branches: [ main ]
+  #push:
+   # branches: [ main ]
     # tags: [ "v*" ]
   workflow_dispatch:
 

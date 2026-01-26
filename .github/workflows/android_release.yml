@@ -1,0 +1,96 @@
+# .github/workflows/android_release.yml
+name: Android Release (Google Play)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_aab:
+    name: Build AAB
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@v1.3.1
+
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-release-aab-unity-${{ vars.UNITY_VERSION || '6000.3.5f1' }}
+          restore-keys: |
+            Library-Android-release-aab-
+            Library-Android-
+            Library-
+
+      - name: Build (AAB)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: ${{ vars.UNITY_PROJECT_PATH || '.' }}
+          unityVersion: ${{ vars.UNITY_VERSION || '6000.3.5f1' }}
+          targetPlatform: Android
+          androidExportType: androidAppBundle
+
+          androidKeystoreName: keystore.keystore
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-Android-aab
+          path: build/Android
+          retention-days: 7
+
+  releaseToGooglePlay:
+    name: Upload to Google Play (Internal)
+    runs-on: ubuntu-latest
+    needs: build_aab
+    env:
+      GOOGLE_PLAY_KEY_FILE: ${{ secrets.GOOGLE_PLAY_KEY_FILE }}
+      ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-Android-aab
+          path: build/Android
+
+      - name: Write Google Play service account json
+        run: |
+          mkdir -p fastlane
+          echo "$GOOGLE_PLAY_KEY_FILE" > fastlane/google-fastlane.json
+          echo "GOOGLE_PLAY_KEY_FILE_PATH=${{ github.workspace }}/fastlane/google-fastlane.json" >> $GITHUB_ENV
+
+      - name: Resolve AAB path
+        run: |
+          AAB_PATH="$(ls -1 build/Android/*.aab | head -n 1)"
+          echo "ANDROID_BUILD_FILE_PATH=$AAB_PATH" >> $GITHUB_ENV
+
+      - name: Set up Ruby (Fastlane)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2
+          bundler-cache: true
+
+      - name: Upload to Google Play
+        uses: maierj/fastlane-action@v3.0.0
+        with:
+          lane: "android internal"
+
+      - name: Cleanup artifact
+        if: always()
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: build-Android-aab

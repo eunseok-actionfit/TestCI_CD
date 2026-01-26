@@ -1,8 +1,8 @@
 name: Build - Android (Ubuntu)
 
 on:
-  push:
-    branches: [ main ]
+  #push:
+   # branches: [ main ]
     # tags: [ "v*" ]
   workflow_dispatch:
 
