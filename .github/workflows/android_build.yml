@@ -37,11 +37,12 @@ jobs:
       - name: Cache Library
         uses: actions/cache@v4
         with:
-          path: Library
-          key: Library-${{ runner.os }}-Android-${{ env.UNITY_VERSION }}
-          restore-keys: |
-            Library-${{ runner.os }}-Android-
-            Library-${{ runner.os }}-
+            path: Library
+            key: Library-${{ runner.os }}-Android-build-${{ env.UNITY_VERSION }}
+            restore-keys: |
+                Library-${{ runner.os }}-Android-build-
+                Library-${{ runner.os }}-Android-
+                Library-${{ runner.os }}-
 
       - name: Build (Signed)
         if: ${{ env.HAS_KEYSTORE == 'true' }}

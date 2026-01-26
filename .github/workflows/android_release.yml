@@ -20,14 +20,16 @@ jobs:
           lfs: true
           fetch-depth: 0
 
-      - uses: actions/cache@v4
+      - name: Cache Library
+        uses: actions/cache@v4
         with:
-          path: Library
-          key: Library-Android-release-aab-unity-${{ vars.UNITY_VERSION || '6000.3.5f1' }}
-          restore-keys: |
-            Library-Android-release-aab-
-            Library-Android-
-            Library-
+            path: Library
+            key: Library-${{ runner.os }}-Android-release-${{ vars.UNITY_VERSION || '6000.3.5f1' }}-aab
+            restore-keys: |
+                Library-${{ runner.os }}-Android-release-
+                Library-${{ runner.os }}-Android-build-
+                Library-${{ runner.os }}-Android-
+                Library-${{ runner.os }}-
 
       - name: Build (AAB)
         uses: game-ci/unity-builder@v4
