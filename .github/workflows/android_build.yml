@@ -61,7 +61,3 @@ jobs:
           name: Build-${{ matrix.targetPlatform }}
           path: build/${{ matrix.targetPlatform }}
           retention-days: 14
-          
-      - name: Return license
-        uses: game-ci/unity-return-license@v2
-        if: always()
