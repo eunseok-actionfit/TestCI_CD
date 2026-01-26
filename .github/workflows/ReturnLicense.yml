@@ -1,0 +1,13 @@
+name: Return License
+
+on: workflow_dispatch
+
+jobs:
+  return_license:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Return Unity License
+        uses: game-ci/unity-return-license@v2
+        if: always()
