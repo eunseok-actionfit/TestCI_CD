@@ -1,4 +1,3 @@
-# .github/workflows/android_build.yml
 name: Android Build
 
 on:
@@ -15,38 +14,44 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
-        androidExportType: [androidPackage, androidAppBundle] # apk, aab
+        projectPath: [ '.' ]
+        unityVersion: [ 6000.3.5f1 ]
+        androidExportType: [ androidPackage, androidAppBundle ] # apk, aab
 
     steps:
       - uses: jlumbroso/free-disk-space@v1.3.1
-        if: ${{ matrix.androidExportType == 'androidAppBundle' || matrix.androidExportType == 'androidPackage' }}
 
       - uses: actions/checkout@v4
         with:
           lfs: true
           fetch-depth: 0
 
-      - uses: actions/cache@v4
+      # Unity Library 캐시 (프로젝트 경로 기준)
+      - name: Cache Library
+        uses: actions/cache@v4
         with:
-          path: Library
-          key: Library-Android-${{ matrix.androidExportType }}-unity-${{ vars.UNITY_VERSION || '6000.3.5f1' }}
+          path: ${{ matrix.projectPath }}/Library
+          key: Library-${{ runner.os }}-${{ matrix.projectPath }}-Android-${{ matrix.unityVersion }}-${{ matrix.androidExportType }}
           restore-keys: |
-            Library-Android-${{ matrix.androidExportType }}-
-            Library-Android-
-            Library-
+            Library-${{ runner.os }}-${{ matrix.projectPath }}-Android-${{ matrix.unityVersion }}-
+            Library-${{ runner.os }}-${{ matrix.projectPath }}-Android-
+            Library-${{ runner.os }}-${{ matrix.projectPath }}-
+            Library-${{ runner.os }}-
 
       - name: Build
         uses: game-ci/unity-builder@v4
         env:
-           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          # 가능하면 이 방식이 더 안정적
+          # UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          projectPath: ${{ vars.UNITY_PROJECT_PATH || '.' }}
-          unityVersion: ${{ vars.UNITY_VERSION || '6000.3.5f1' }}
+          projectPath: ${{ matrix.projectPath }}
+          unityVersion: ${{ matrix.unityVersion }}
           targetPlatform: Android
-
           androidExportType: ${{ matrix.androidExportType }}
 
           # 서명(필요 시)
@@ -63,6 +68,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Android-${{ matrix.androidExportType }}-build-${{ github.run_number }}
+          name: Android-${{ matrix.androidExportType }}-Unity-${{ matrix.unityVersion }}-Run-${{ github.run_number }}
           path: build/Android
           retention-days: 14
